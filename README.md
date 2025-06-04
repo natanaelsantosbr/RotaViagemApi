@@ -43,14 +43,13 @@ API RESTful para cadastro e consulta de rotas aéreas, com cálculo da **rota ma
   "valor": 10
 }
 ```
-### ▶️ Cadastrar nova rota  
-`POST /api/rota`
+### 🔍 Consultar a melhor rota
+`GET /api/rota/melhor?origem=GRU&destino=CDG`
 
 ```json
 {
-  "origem": "GRU",
-  "destino": "BRC",
-  "valor": 10
+  "rota": "GRU - BRC - SCL - ORL - CDG",
+  "custo": 40
 }
 ```
 
