@@ -23,24 +23,39 @@ namespace RotaViagem.Application
 
         public (List<string> caminho, decimal custo) BuscarMelhorRota(string origem, string destino)
         {
-            var grafo = _repository.GetAll()
+            origem = origem.ToUpperInvariant();
+            destino = destino.ToUpperInvariant();
+
+            var rotas = _repository.GetAll()
+                .Select(r => new Rota
+                {
+                    Origem = r.Origem.ToUpperInvariant(),
+                    Destino = r.Destino.ToUpperInvariant(),
+                    Valor = r.Valor
+                })
+                .ToList();
+
+            var grafo = rotas
                 .GroupBy(r => r.Origem)
                 .ToDictionary(g => g.Key, g => g.ToList());
 
             var fila = new PriorityQueue<(string atual, List<string> caminho, decimal custo), decimal>();
             fila.Enqueue((origem, new List<string> { origem }, 0), 0);
 
-            var visitados = new HashSet<string>();
+            var visitados = new Dictionary<string, decimal>();
 
             while (fila.TryDequeue(out var atual, out _))
             {
+                if (visitados.ContainsKey(atual.atual) && atual.custo >= visitados[atual.atual])
+                    continue;
+
+                visitados[atual.atual] = atual.custo;
+
                 if (atual.atual == destino)
                     return (atual.caminho, atual.custo);
 
-                if (visitados.Contains(atual.atual)) continue;
-                visitados.Add(atual.atual);
-
-                if (!grafo.ContainsKey(atual.atual)) continue;
+                if (!grafo.ContainsKey(atual.atual))
+                    continue;
 
                 foreach (var vizinho in grafo[atual.atual])
                 {

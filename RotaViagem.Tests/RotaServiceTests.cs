@@ -59,4 +59,59 @@ public class RotaServiceTests
         Assert.Equal(0, custo);
         Assert.Equal(new[] { "GRU" }, caminho);
     }
+
+    [Fact]
+    public void MelhorRota_ComMultiplosCaminhos_DeveEscolherMaisBarato()
+    {
+        var repo = new InMemoryRotaRepository();
+        repo.Add(new Rota { Origem = "A", Destino = "B", Valor = 10 });
+        repo.Add(new Rota { Origem = "A", Destino = "C", Valor = 2 });
+        repo.Add(new Rota { Origem = "C", Destino = "B", Valor = 1 });
+
+        var service = new RotaService(repo);
+        var (caminho, custo) = service.BuscarMelhorRota("A", "B");
+
+        Assert.Equal(3, custo);
+        Assert.Equal(new[] { "A", "C", "B" }, caminho);
+    }
+
+    [Fact]
+    public void MelhorRota_ComCiclo_DeveIgnorarLoopECalcularCorretamente()
+    {
+        var repo = new InMemoryRotaRepository();
+        repo.Add(new Rota { Origem = "A", Destino = "B", Valor = 5 });
+        repo.Add(new Rota { Origem = "B", Destino = "C", Valor = 5 });
+        repo.Add(new Rota { Origem = "C", Destino = "A", Valor = 5 }); // ciclo
+        repo.Add(new Rota { Origem = "C", Destino = "D", Valor = 1 });
+
+        var service = new RotaService(repo);
+        var (caminho, custo) = service.BuscarMelhorRota("A", "D");
+
+        Assert.Equal(11, custo); // A → B → C → D
+        Assert.Equal(new[] { "A", "B", "C", "D" }, caminho);
+    }
+
+    [Fact]
+    public void MelhorRota_SemRotasCadastradas_DeveRetornarNaoEncontrado()
+    {
+        var service = new RotaService(new InMemoryRotaRepository());
+        var (caminho, custo) = service.BuscarMelhorRota("A", "B");
+
+        Assert.Equal(-1, custo);
+        Assert.Empty(caminho);
+    }
+
+    [Fact]
+    public void MelhorRota_CaseInsensitive_DeveEncontrarRotaMesmoComLetrasMinusculas()
+    {
+        var service = CriarServicoComDadosDeExemplo();
+        var (caminho, custo) = service.BuscarMelhorRota("gru", "cdg");
+
+        Assert.Equal(40, custo);
+        Assert.Equal(new[] { "GRU", "BRC", "SCL", "ORL", "CDG" }, caminho);
+    }
+
+
+
+
 }
